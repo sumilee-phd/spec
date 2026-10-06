@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>글자 수 세기</title>
+  <style>
+    /* 외부 라이브러리 없이, 한 페이지로 동작하는 글자 수 세기 도구입니다. */
+    /* 화면은 예전 포털 첫 화면처럼, 연두색 바탕 가운데에 초록 테두리 입력창을 둡니다. */
+    body {
+      font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+      max-width: 640px;
+      margin: 72px auto 48px;
+      padding: 0 16px;
+      color: #1a1a1a;
+      background: #d8f0b0;
+    }
+    h1 {
+      margin: 0 0 28px;
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      text-align: center;
+      color: #0a8a3a;
+    }
+    /* 검색창 모양의 틀: 입력 칸과 아래쪽 도구 줄을 한 테두리 안에 담습니다. */
+    .search {
+      border: 2px solid #03c75a;
+      border-radius: 28px;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    .search:focus-within {
+      box-shadow: 0 2px 10px rgba(3, 199, 90, 0.35);
+    }
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 180px;
+      padding: 20px 24px 12px;
+      font-family: inherit;
+      font-size: 16px;
+      line-height: 1.6;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+    .tools {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px 12px;
+      padding: 10px 12px 10px 24px;
+      border-top: 1px solid #eee;
+    }
+    .limit {
+      font-size: 14px;
+      color: #555;
+    }
+    .limit input {
+      width: 96px;
+      margin-left: 8px;
+      padding: 6px 10px;
+      font-size: 14px;
+      border: 1px solid #dadce0;
+      border-radius: 16px;
+      box-sizing: border-box;
+      outline: 0;
+    }
+    .limit input:focus {
+      border-color: #03c75a;
+    }
+    .over {
+      color: #d32f2f;
+    }
+    .clear {
+      padding: 8px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      border: 0;
+      border-radius: 20px;
+      background: #03c75a;
+      cursor: pointer;
+    }
+    .clear:hover {
+      background: #02b351;
+    }
+    .count {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px 12px;
+      margin: 24px 0 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .count > span {
+      padding: 8px 18px;
+      border-radius: 20px;
+      background: #fff;
+    }
+    .hint {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #4f6338;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>글자 수 세기</h1>
+
+  <!-- 검색창 모양의 틀: 입력 칸과 도구 줄을 함께 감쌉니다. -->
+  <div class="search">
+    <!-- 입력 칸: 여기에 글을 적습니다. -->
+    <textarea id="input" placeholder="여기에 글을 적어 보세요."></textarea>
+
+    <div class="tools">
+      <!-- 제한 칸: 비워 두면 제한 없이 셉니다. -->
+      <label class="limit">제한 글자 수
+        <input id="limit" type="number" min="0" placeholder="예: 500" />
+      </label>
+
+      <!-- 전체 지우기: 입력 칸을 비우고 글자 수를 0으로 되돌립니다. -->
+      <button id="clear" class="clear" type="button">전체 지우기</button>
+    </div>
+  </div>
+
+  <!-- 결과: 입력이 바뀔 때마다 실시간으로 갱신됩니다. -->
+  <p class="count">
+    <span>공백 포함: <span id="count">0</span></span>
+    <span>공백 제외: <span id="countNoSpace">0</span></span>
+  </p>
+  <p class="hint">입력 칸의 내용이 바뀔 때마다 자동으로 다시 셉니다.</p>
+
+  <script>
+    // 입력 칸과 결과 표시 영역을 가져옵니다.
+    var input = document.getElementById("input");
+    var countView = document.getElementById("count");
+    var countNoSpaceView = document.getElementById("countNoSpace");
+    var limitInput = document.getElementById("limit");
+    var clearButton = document.getElementById("clear");
+
+    // 글자 수를 세어 화면에 보여 주는 함수입니다.
+    // 빈 입력이면 length가 0이므로 자연스럽게 0이 표시됩니다.
+    function updateCount() {
+      var text = input.value;
+      var count = text.length;
+      // 띄어쓰기, 줄바꿈, 탭을 모두 지운 뒤의 길이입니다.
+      var countNoSpace = text.replace(/\s/g, "").length;
+      countView.textContent = count;
+      countNoSpaceView.textContent = countNoSpace;
+
+      // 제한 칸이 비어 있거나 음수이면 제한이 없는 것으로 봅니다.
+      var limit = Number(limitInput.value);
+      var hasLimit = limitInput.value !== "" && limit >= 0;
+      // 제한을 넘은 숫자만 빨간색으로 바꿉니다.
+      countView.classList.toggle("over", hasLimit && count > limit);
+      countNoSpaceView.classList.toggle("over", hasLimit && countNoSpace > limit);
+    }
+
+    // 입력이 바뀔 때마다 실시간으로 다시 셉니다.
+    input.addEventListener("input", updateCount);
+    // 제한 값을 바꿨을 때도 색을 다시 맞춥니다.
+    limitInput.addEventListener("input", updateCount);
+    // 전체 지우기를 누르면 입력 칸을 비우고 글자 수를 다시 셉니다.
+    clearButton.addEventListener("click", function () {
+      input.value = "";
+      updateCount();
+    });
+
+    // 처음 화면을 열었을 때도 한 번 맞춰 둡니다.
+    updateCount();
+  </script>
+</body>
+</html>
